@@ -1,18 +1,22 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { nanoid } from '@reduxjs/toolkit'
 import { useHistory } from 'react-router-dom'
 import { postAdded } from './postsSlice'
 
 export const AddPostForm = ({ match }) => {
     const [title, setTitle] = useState('')
     const [content, setContent] = useState('')
+    const [userId, setUserId] = useState('')
 
     const dispatch = useDispatch()
+
+    const users = useSelector(state => state.users)
+
     const history = useHistory()
 
     const onTitleChanged = e => setTitle(e.target.value)
     const onContentChanged = e => setContent(e.target.value)
+    const onAuthorChanged = e => setUserId(e.target.value)
 
     const divStyle = {
         margin: '0 5px 0 0'
@@ -21,11 +25,7 @@ export const AddPostForm = ({ match }) => {
     const onSavePostClicked = () => {
         if (title && content) {
             dispatch(
-                postAdded({
-                    id: nanoid(),
-                    title,
-                    content
-                })
+                postAdded(title, content, userId)
             )
 
             setTitle('')
@@ -36,6 +36,14 @@ export const AddPostForm = ({ match }) => {
     const onCancel = () => {
         history.push('/')
     }
+
+    const canSave = Boolean(title) && Boolean(content) && Boolean(userId)
+
+    const usersOptions = users.map(user => (
+      <option key={user.id} value={user.id}>
+        {user.name}
+      </option>
+    ))
 
     return (
         <section>
@@ -49,6 +57,11 @@ export const AddPostForm = ({ match }) => {
                     value={title}
                     onChange={onTitleChanged}
                 />
+                <label htmlFor="postAuthor">Author:</label>
+                <select id="postAuthor" value={userId} onChange={onAuthorChanged}>
+                    <option value=""></option>
+                    {usersOptions}
+                </select>
                 <label htmlFor="postContent">Content:</label>
                 <textarea
                     id="postContent"
@@ -57,7 +70,7 @@ export const AddPostForm = ({ match }) => {
                     onChange={onContentChanged}
                 />
 
-                <button type="button" onClick={onSavePostClicked} style={divStyle}>Save Post</button>
+                <button type="button" onClick={onSavePostClicked} disabled={!canSave} style={divStyle}>Save Post</button>
                 <button type="button" onClick={onCancel} style={divStyle}>Cancel</button>
             </form>
         </section>
